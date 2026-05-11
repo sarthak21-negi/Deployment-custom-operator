@@ -153,11 +153,3 @@ func (r *DeploymentCustomOperatorReconciler) SetupWithManager(mgr ctrl.Manager) 
 		Named("deploymentcustomoperator").
 		Complete(r)
 }
-
-func int32Ptr(i int32) *int32 {
-	return &i
-}
-
-func debug(v interface{}) {
-	fmt.Println(v)
-}
