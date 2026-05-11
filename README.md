@@ -1,135 +1,233 @@
-# deployment-custom-operator
-// TODO(user): Add simple overview of use/purpose
+# Description 
+A custom Kubernetes Operator built using Golang, Kubebuilder, and controller-runtime that automatically scales Kubernetes Deployments based on configurable time schedules.
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+The operator watches custom resources and dynamically updates Deployment replica counts during active and inactive hours to optimize cluster resource utilization.
 
-## Getting Started
+---
 
-### Prerequisites
-- go version v1.23.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+# Features
 
-### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
+- Custom Kubernetes Operator built with Kubebuilder
+- Time-based autoscaling for Kubernetes Deployments
+- Custom Resource Definition (CRD) for scaling schedules
+- Declarative scaling configuration
+- Automatic scale-up and scale-down
+- Reconciliation loop using controller-runtime
+- Status updates for active schedules
+- RBAC-enabled controller permissions
+- Tested locally using Kind cluster
 
-```sh
-make docker-build docker-push IMG=<some-registry>/deployment-custom-operator:tag
+---
+
+# Tech Stack
+
+- Golang
+- Kubernetes
+- Kubebuilder
+- controller-runtime
+- Kind
+- Docker
+
+---
+
+# Project Structure
+
+```bash
+deployment-custom-operator/
+├── api/
+│   └── v1alpha1/
+├── cmd/
+├── config/
+│   ├── crd/
+│   ├── rbac/
+│   ├── manager/
+│   └── samples/
+├── internal/
+│   └── controller/
+├── Makefile
+└── README.md
 ```
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
+---
 
-**Install the CRDs into the cluster:**
+# Architecture
 
-```sh
+The operator follows the Kubernetes Operator pattern:
+
+1. User creates a custom DeploymentCustomOperator resource
+2. Controller watches the resource
+3. Reconcile loop checks current time
+4. Controller compares desired state vs actual state
+5. Deployment replicas are updated automatically
+
+---
+
+# Custom Resource Example
+
+```yaml
+apiVersion: dpscaler.sarthak.dev/v1alpha1
+kind: DeploymentCustomOperator
+
+metadata:
+  name: deploymentcustomoperator-sample
+  namespace: default
+
+spec:
+  targets:
+    - name: nginx-demo
+      namespace: default
+      replicas: 5
+
+  schedule:
+    startHour: 9
+    endHour: 18
+    defaultReplicas: 1
+```
+
+---
+
+# How It Works
+
+- During active hours (9 AM – 6 PM), the Deployment scales to 5 replicas
+- Outside active hours, the Deployment scales back to 1 replica
+- The controller continuously monitors the cluster state and reconciles resources every minute
+
+---
+
+# Prerequisites
+
+Make sure the following are installed:
+
+- Go >= 1.24
+- Docker
+- kubectl
+- Kind
+- Kubebuilder
+
+---
+
+# Setup Instructions
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/sarthak21-negi/deployment-custom-operator.git
+
+cd deployment-custom-operator
+```
+
+---
+
+## 2. Create Kind Cluster
+
+```bash
+kind create cluster --name dpscaler
+```
+
+---
+
+## 3. Install CRD
+
+```bash
 make install
 ```
 
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
+---
 
-```sh
-make deploy IMG=<some-registry>/deployment-custom-operator:tag
+## 4. Run Controller
+
+```bash
+make run
 ```
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
+---
 
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
+## 5. Deploy Test Application
 
-```sh
-kubectl apply -k config/samples/
+Create deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: nginx-demo
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: nginx-demo
+
+  template:
+    metadata:
+      labels:
+        app: nginx-demo
+
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
 ```
 
->**NOTE**: Ensure that the samples has default values to test it out.
+Apply deployment:
 
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
-
-```sh
-kubectl delete -k config/samples/
+```bash
+kubectl apply -f nginx-deployment.yaml
 ```
 
-**Delete the APIs(CRDs) from the cluster:**
+---
 
-```sh
-make uninstall
+## 6. Apply Custom Resource
+
+```bash
+kubectl apply -f config/samples/dpscaler_v1alpha1_deploymentcustomoperator.yaml
 ```
 
-**UnDeploy the controller from the cluster:**
+---
 
-```sh
-make undeploy
+# Verify Scaling
+
+Watch deployment replicas:
+
+```bash
+kubectl get deployment nginx-demo -w
 ```
 
-## Project Distribution
+---
 
-Following the options to release and provide this solution to the users.
+# Controller Logic
 
-### By providing a bundle with all YAML files
+The controller:
 
-1. Build the installer for the image built and published in the registry:
+- Watches DeploymentCustomOperator resources
+- Reads scaling schedules
+- Checks current system hour
+- Fetches target Deployments
+- Updates replica counts dynamically
+- Updates CRD status fields
 
-```sh
-make build-installer IMG=<some-registry>/deployment-custom-operator:tag
+---
+
+# Status Fields
+
+The operator updates status information:
+
+```yaml
+status:
+  active: true
+  lastScaleTime: "2026-05-11T10:00:00Z"
 ```
 
-**NOTE:** The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without its
-dependencies.
+---
 
-2. Using the installer
+# Running Tests
 
-Users can just run 'kubectl apply -f <URL for YAML BUNDLE>' to install
-the project, i.e.:
-
-```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/deployment-custom-operator/<tag or branch>/dist/install.yaml
+```bash
+make test
 ```
 
-### By providing a Helm Chart
-
-1. Build the chart using the optional helm plugin
-
-```sh
-kubebuilder edit --plugins=helm/v1-alpha
-```
-
-2. See that a chart was generated under 'dist/chart', and users
-can obtain this solution from there.
-
-**NOTE:** If you change the project, you need to update the Helm Chart
-using the same command above to sync the latest changes. Furthermore,
-if you create webhooks, you need to use the above command with
-the '--force' flag and manually ensure that any custom configuration
-previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml'
-is manually re-applied afterwards.
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-**NOTE:** Run `make help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
-
-## License
-
-Copyright 2026.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+---
