@@ -1,0 +1,17 @@
+apiVersion: dpscaler.sarthak.dev/v1alpha1
+kind: DeploymentCustomOperator
+
+metadata:
+  name: deploymentcustomoperator-sample
+  namespace: default
+
+spec:
+  targets:
+    - name: nginx-demo
+      namespace: default
+      replicas: 5
+
+  schedule:
+    startHour: 0
+    endHour: 23
+    defaultReplicas: 1

@@ -1,0 +1,99 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.17.1
+  name: deploymentcustomoperators.dpscaler.sarthak.dev
+spec:
+  group: dpscaler.sarthak.dev
+  names:
+    kind: DeploymentCustomOperator
+    listKind: DeploymentCustomOperatorList
+    plural: deploymentcustomoperators
+    singular: deploymentcustomoperator
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DeploymentCustomOperator is the Schema for the deploymentcustomoperators
+          API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              schedule:
+                description: Schedule configuration
+                properties:
+                  defaultReplicas:
+                    description: Replicas outside active period
+                    format: int32
+                    type: integer
+                  endHour:
+                    description: |-
+                      End hour in 24-hour format
+                      Example: 18 means 6 PM
+                    type: integer
+                  startHour:
+                    description: |-
+                      Start hour in 24-hour format
+                      Example: 9 means 9 AM
+                    type: integer
+                required:
+                - defaultReplicas
+                - endHour
+                - startHour
+                type: object
+              targets:
+                description: List of deployments to scale
+                items:
+                  properties:
+                    name:
+                      description: Deployment name
+                      type: string
+                    namespace:
+                      description: Namespace of deployment
+                      type: string
+                    replicas:
+                      description: Desired replicas during active schedule
+                      format: int32
+                      type: integer
+                  required:
+                  - name
+                  - namespace
+                  - replicas
+                  type: object
+                type: array
+            required:
+            - schedule
+            - targets
+            type: object
+          status:
+            properties:
+              active:
+                type: boolean
+              lastScaleTime:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
