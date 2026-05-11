@@ -242,5 +242,7 @@ Operator in action
 
 <img width="1920" height="599" alt="Screenshot make run" src="https://github.com/user-attachments/assets/8c10b537-27b9-49cb-9429-a939e11cd3c5" />
 
+---
+
 <img width="1301" height="112" alt="Screenshot (16)" src="https://github.com/user-attachments/assets/3ba29cd9-d40b-4dce-8d98-ef2f641f69c0" />
 
