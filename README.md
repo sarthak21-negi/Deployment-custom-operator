@@ -224,10 +224,23 @@ status:
 
 ---
 
-# Running Tests
+# Testing The Controller
+
+Use the make test command to run tests
 
 ```bash
 make test
 ```
 
+<img width="1903" height="246" alt="make test" src="https://github.com/user-attachments/assets/9fc1c4a6-ba88-407b-b994-92b3ae47c85b" />
+
 ---
+
+# ScreenShots
+
+Operator in action
+
+<img width="1920" height="599" alt="Screenshot make run" src="https://github.com/user-attachments/assets/8c10b537-27b9-49cb-9429-a939e11cd3c5" />
+
+<img width="1301" height="112" alt="Screenshot (16)" src="https://github.com/user-attachments/assets/3ba29cd9-d40b-4dce-8d98-ef2f641f69c0" />
+
